@@ -2,26 +2,73 @@ title = "this is the configuration file of the Keithley plugin"
 
 [Keithley]
 
-[Keithley.27XX]
-title = "Configuration entry for a Keithley 27XX Multimeter/Switch System"
+[Keithley.2700]
+title = "Configuration entry for a Keithley 2700 Multimeter/Switch System"
 
-[Keithley.27XX.INSTRUMENT01]
+[Keithley.2700.INSTRUMENT01]
 title = "Instrument in wich is plugged the switching module used for data acquisition"
-rsrc_name_example = ["ASRL1::INSTR", "TCPIP::192.168.01.01::1394::SOCKET"]
-rsrc_name = "ASRL1::INSTR"
-model_name = ""
+rsrc_name_example_RS232 = "ASRL1::INSTR"
+rsrc_name = ""
+model_name = "2700"
 panel = "rear"
 termination_character = "Keithley must be set to LF"
 
-[Keithley.27XX.INSTRUMENT01.MODULE01]
-module_name = ""
-info = 'Thermocouple example: mode = "temp", transducer = "tc", type = "K", ref_junc = "int", resolution = 6, nplc = 5"'
+[Keithley.2700.INSTRUMENT01.MODULE01]
+module_name = "NONE"
 
-[Keithley.27XX.INSTRUMENT01.MODULE02]
-module_name = ""
+[Keithley.2700.INSTRUMENT01.MODULE02]
+module_name = "NONE"
 
-[Keithley.27XX.INSTRUMENT01.MODULE01.CHANNELS]
+[Keithley.2700.INSTRUMENT01.MODULE01.CHANNELS]
 
-[Keithley.27XX.INSTRUMENT01.MODULE02.CHANNELS]
+[Keithley.2700.INSTRUMENT01.MODULE02.CHANNELS]
 
-[Keithley.27XX.INSTRUMENT01.MODULE01.CHANNELS.101]
+[Keithley.2700.INSTRUMENT01.MODULE01.CHANNELS.101]
+
+[Keithley.2701]
+title = "Configuration entry for a Keithley 2701 Multimeter/Switch System"
+
+[Keithley.2701.INSTRUMENT01]
+title = "Instrument in wich is plugged the switching module used for data acquisition"
+rsrc_name_example_RS232 = "ASRL1::INSTR"
+rsrc_name_example_TCPIP = "TCPIP::192.168.01.01::1394::SOCKET"
+rsrc_name = ""
+model_name = "2701"
+panel = "rear"
+termination_character = "Keithley must be set to LF"
+
+[Keithley.2701.INSTRUMENT01.MODULE01]
+module_name = "NONE"
+
+[Keithley.2701.INSTRUMENT01.MODULE02]
+module_name = "NONE"
+
+[Keithley.2701.INSTRUMENT01.MODULE01.CHANNELS]
+
+[Keithley.2701.INSTRUMENT01.MODULE02.CHANNELS]
+
+[Keithley.2701.INSTRUMENT01.MODULE01.CHANNELS.101]
+
+[Keithley.2750]
+title = "Configuration entry for a Keithley 2701 Multimeter/Switch System"
+
+[Keithley.2750.INSTRUMENT01]
+title = "Instrument in wich is plugged the switching module used for data acquisition"
+rsrc_name_example_RS232 = "ASRL1::INSTR"
+rsrc_name_example_TCPIP = "TCPIP::192.168.01.01::1394::SOCKET"
+rsrc_name = ""
+model_name = "2750"
+panel = "rear"
+termination_character = "Keithley must be set to LF"
+
+[Keithley.2750.INSTRUMENT01.MODULE01]
+module_name = "NONE"
+
+[Keithley.2750.INSTRUMENT01.MODULE02]
+module_name = "NONE"
+
+[Keithley.2750.INSTRUMENT01.MODULE01.CHANNELS]
+
+[Keithley.2750.INSTRUMENT01.MODULE02.CHANNELS]
+
+[Keithley.2750.INSTRUMENT01.MODULE01.CHANNELS.101]

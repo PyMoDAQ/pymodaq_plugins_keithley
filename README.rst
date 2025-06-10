@@ -42,6 +42,8 @@ Viewer0D
 ++++++++
 
 * **Keithley_Pico**: Pico-Amperemeter Keithley 648X Series, 6430 and 6514
-* **Keithley2110**: Multimeter Keithley  2110
-* **Keithley27XX**: Keithley 27XX Multimeter/Switch System using switching modules from the 7700 series.
 * **Keithley2100**: Multimeter Keithley 2100
+* **Keithley2110**: Multimeter Keithley 2110
+* **Keithley2700**: Keithley 2700 Multimeter/Switch System -- RS-232/GPIB -- 2 slots (7700 series modules)
+* **Keithley2701**: Keithley 2701 Ethernet Multimeter/Switch System -- Ethernet/RS-232 -- 2 slots (7700 series modules)
+* **Keithley2750**: Keithley 2750 Multimeter/Switch System  -- RS-232/GPIB -- 2 slots (7700 series modules)

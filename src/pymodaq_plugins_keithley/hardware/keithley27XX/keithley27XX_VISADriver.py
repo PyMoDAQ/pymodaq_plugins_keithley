@@ -6,25 +6,16 @@ logger = set_logger(get_module_name(__file__))
 
 
 class Keithley27XXVISADriver:
-    """VISA class driver for the Keithley 27XX Multimeter/Switch System
-
-    This class relies on pyvisa module to communicate with the instrument via VISA protocol.
-    Please refer to the instrument reference manual available at:
-    https://download.tek.com/manual/2700-900-01K_Feb_2016.pdf
-    https://download.tek.com/manual/2701-900-01G_Feb_2016.pdf
+    """VISA base class driver for Keithley 2700-2701-2750 drivers
     """
-    # List the Keithley instruments the user has configured from the .toml configuration file
-    list_instruments = {}
-    for instr in config["Keithley", "27XX"].keys():
-        if "INSTRUMENT" in instr:
-            list_instruments[instr] = config["Keithley", "27XX", instr, "rsrc_name"]
-    logger.info("Configured instruments: {}".format(list(list_instruments.items())))
 
-    # Non-amps modules
+    # Modules specifications
     non_amp_module = {"MODULE01": False, "MODULE02": False}
     non_amp_modules_list = ['7701', '7703', '7706', '7707', '7708', '7709']
+    automatic_cjc_modules_list = ['7700', '7706', '7708']
 
     # Channels & modes attributes
+    model = ''
     channels_scan_list = ''
     modes_channels_dict = {'VOLT:DC': [],
                            'VOLT:AC': [],
@@ -64,22 +55,27 @@ class Keithley27XXVISADriver:
                                            read_termination="\n",
                                            )
             self._instr.timeout = 10000
+
             # Check if the selected resource match the loaded configuration
             model = self.get_idn()[32:36]
+            try:
+                assert model == self.model, model
+            except AssertionError as err:
+                logger.error("{}: Keithley {} used doesn't match the model in the configuration.".format(KeyError, err))
             if "27" not in model:
-                logger.warning("Driver designed to use Keithley 27XX, not {} model. Problems may occur.".format(model))
-            for instr in config["Keithley", "27XX"]:
-                if type(config["Keithley", "27XX", instr]) == dict:
-                    if self.rsrc_name in config["Keithley", "27XX", instr, "rsrc_name"]:
+                logger.warning("Driver designed to use Keithley 27XX series, not {} model.".format(model))
+            for instr in config["Keithley", self.model]:
+                if type(config["Keithley", self.model, instr]) == dict:
+                    if self.rsrc_name in config["Keithley", self.model, instr, "rsrc_name"]:
                         self.instr = instr
-            logger.info("Instrument selected: {} ".format(config["Keithley", "27XX", self.instr, "rsrc_name"]))
-            logger.info("Keithley model : {}".format(config["Keithley", "27XX", self.instr, "model_name"]))
+            logger.info("Instrument selected: {} ".format(config["Keithley", self.model, self.instr, "rsrc_name"]))
+            logger.info("Keithley model : {}".format(config["Keithley", self.model, self.instr, "model_name"]))
             try:
                 # Load the configuration matching the selected module
                 cards = self.get_card().split(',')
                 logger.info("card : {}".format(cards))
                 try:
-                    assert config["Keithley", "27XX", self.instr, "MODULE01", "module_name"] == cards[0], cards[0]
+                    assert config["Keithley", self.model, self.instr, "MODULE01", "module_name"] == cards[0], cards[0]
                     self.configured_modules["MODULE01"] = cards[0]
                 except KeyError as err:
                     logger.error("{}: configuration {} does not exist.".format(KeyError, err))
@@ -87,7 +83,7 @@ class Keithley27XXVISADriver:
                     logger.error("{}: Switching module {} does not match any configuration".format(
                         AssertionError, str(err)))
                 try:
-                    assert config["Keithley", "27XX", self.instr, "MODULE02", "module_name"] == cards[1], cards[1]
+                    assert config["Keithley", self.model, self.instr, "MODULE02", "module_name"] == cards[1], cards[1]
                     self.configured_modules["MODULE02"] = cards[1]
                 except KeyError as err:
                     logger.error("{}: configuration {} does not exist." .format(KeyError, err))
@@ -96,10 +92,10 @@ class Keithley27XXVISADriver:
                         AssertionError, str(err)))
                 logger.info("Configured modules : {}".format(self.configured_modules))
                 try:
-                    if config["Keithley", "27XX", self.instr, 'MODULE01', 'module_name']\
+                    if config["Keithley", self.model, self.instr, 'MODULE01', 'module_name']\
                             in self.non_amp_modules_list:
                         self.non_amp_module["MODULE01"] = True
-                    if config["Keithley", "27XX", self.instr, 'MODULE02', 'module_name']\
+                    if config["Keithley", self.model, self.instr, 'MODULE02', 'module_name']\
                             in self.non_amp_modules_list:
                         self.non_amp_module["MODULE02"] = True
                 except KeyError:
@@ -109,6 +105,8 @@ class Keithley27XXVISADriver:
                 logger.error(AttributeError)
         except visa.errors.VisaIOError as err:
             logger.error(err)
+        except Exception:
+            logger.error(Exception)
 
     def configuration_sequence(self):
         """Configure each channel selected by the user
@@ -127,24 +125,24 @@ class Keithley27XXVISADriver:
 
         # The following loop set up each channel in the config file
         for module in self.configured_modules:
-            for key in config["Keithley", "27XX", self.instr, module, "CHANNELS"].keys():
+            for key in config["Keithley", self.model, self.instr, module, "CHANNELS"].keys():
 
                 # Handling user mistakes if the channels' configuration section is not correctly set up
-                if not type(config["Keithley", "27XX", self.instr, module, 'CHANNELS', key]) == dict:
+                if not type(config["Keithley", self.model, self.instr, module, 'CHANNELS', key]) == dict:
                     logger.info("Channel {} not correctly defined, must be a dictionary" .format(key))
                     continue
-                if not config["Keithley", "27XX", self.instr, module, 'CHANNELS', key]:
+                if not config["Keithley", self.model, self.instr, module, 'CHANNELS', key]:
                     continue
-                if "mode" not in config["Keithley", "27XX", self.instr, module, 'CHANNELS', key]:
+                if "mode" not in config["Keithley", self.model, self.instr, module, 'CHANNELS', key]:
                     logger.info("Channel {} not fully defined, 'mode' is missing" .format(key))
                     continue
-                if config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "mode"].upper()\
+                if config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "mode"].upper()\
                         not in self.modes_channels_dict.keys():
                     logger.info("Channel {} not correctly defined, mode not recognized" .format(key))
                     continue
 
                 # Channel mode
-                mode = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "mode"].upper()
+                mode = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "mode"].upper()
                 self.modes_channels_dict[mode].append(int(key))
                 channel = '(@' + key + ')'
                 channels += key + ","
@@ -152,37 +150,37 @@ class Keithley27XXVISADriver:
                 self._instr.write(cmd)
 
                 # Config
-                if 'range' in config["Keithley", "27XX", self.instr, module, 'CHANNELS', key].keys():
-                    rang = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "range"]
+                if 'range' in config["Keithley", self.model, self.instr, module, 'CHANNELS', key].keys():
+                    rang = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "range"]
                     if 'autorange' in str(rang):
                         self._instr.write(mode + ':RANG:AUTO ')
                     else:
                         self._instr.write(mode + ':RANG ' + str(range))
 
-                if 'resolution' in config["Keithley", "27XX", self.instr, module, 'CHANNELS', key].keys():
-                    resolution = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "resolution"]
+                if 'resolution' in config["Keithley", self.model, self.instr, module, 'CHANNELS', key].keys():
+                    resolution = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "resolution"]
                     self._instr.write(mode + ':DIG ' + str(resolution))
 
-                if 'nplc' in config["Keithley", "27XX", self.instr, module, 'CHANNELS', key].keys():
-                    nplc = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "nplc"]
+                if 'nplc' in config["Keithley", self.model, self.instr, module, 'CHANNELS', key].keys():
+                    nplc = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "nplc"]
                     self._instr.write(mode + ':NPLC ' + str(nplc))
 
                 if "TEMP" in mode:
-                    transducer = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "transducer"].upper()
-                    if "TC" in transducer:
-                        tc_type = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "type"].upper()
-                        ref_junc = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "ref_junc"].upper()
-                        self.mode_temp_tc(channel, transducer, tc_type, ref_junc)
-                    elif "THER" in transducer:
-                        ther_type = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "type"].upper()
-                        self.mode_temp_ther(channel, transducer, ther_type)
-                    elif "FRTD" in transducer:
-                        frtd_type = config["Keithley", "27XX", self.instr, module, 'CHANNELS', key, "type"].upper()
-                        self.mode_temp_frtd(channel, transducer, frtd_type)
+                    trans = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "transducer"].upper()
+                    if "TC" in trans:
+                        tc_type = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "type"].upper()
+                        ref_j = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "ref_junc"].upper()
+                        self.mode_temp_tc(module, channel, trans, tc_type, ref_j)
+                    elif "THER" in trans:
+                        ther_type = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "type"].upper()
+                        self.mode_temp_ther(channel, trans, ther_type)
+                    elif "FRTD" in trans:
+                        frtd_type = config["Keithley", self.model, self.instr, module, 'CHANNELS', key, "type"].upper()
+                        self.mode_temp_frtd(channel, trans, frtd_type)
 
                 # Console info
-                logger.info("Channels {} \n {}".format(key,
-                                                       config["Keithley", "27XX", self.instr, module, 'CHANNELS', key]))
+                logger.info("Channels {} \n {}"
+                            .format(key, config["Keithley", self.model, self.instr, module, 'CHANNELS', key]))
                 # Timeout update for long measurement modes such as voltage AC
                 if "AC" in mode:
                     self._instr.timeout += 4000
@@ -233,9 +231,9 @@ class Keithley27XXVISADriver:
             # Trigger scan
             self._instr.write("*TRG")
             # Get data (equivalent to TRAC:DATA? from buffer)
-            str_answer = self._instr.query("FETCH?")
+            str_answer = self.get_data()
         else:
-            str_answer = self._instr.query("FETCH?")
+            str_answer = self.get_data()
         # Split the instrument answer (MEASUREMENT,TIME,READING COUNT) to create a list
         list_split_answer = str_answer.split(",")
 
@@ -281,16 +279,20 @@ class Keithley27XXVISADriver:
 
     def get_card(self):
         # Query switching module
-        return self._instr.query("*OPT?")
-    
+        raise NotImplementedError
+
+    def get_data(self):
+        # Make a measurement
+        raise NotImplementedError
+
     def get_error(self):
         # Ask the keithley to return the last current error
-        return self._instr.query("SYST:ERR?")
-    
+        raise NotImplementedError
+
     def get_idn(self):
         # Query identification
-        return self._instr.query("*IDN?")
-    
+        raise NotImplementedError
+
     def init_cont_off(self):
         # Disable continuous initiation
         self._instr.write("INIT:CONT OFF")
@@ -303,10 +305,13 @@ class Keithley27XXVISADriver:
         self._instr.write("TEMP:TRAN " + transducer + "," + channel)
         self._instr.write("TEMP:FRTD:TYPE " + frtd_type + "," + channel)
 
-    def mode_temp_tc(self, channel, transducer, tc_type, ref_junc,):
+    def mode_temp_tc(self, module, channel, transducer, tc_type, ref_junc,):
         self._instr.write("TEMP:TRAN " + transducer + "," + channel)
         self._instr.write("TEMP:TC:TYPE " + tc_type + "," + channel)
         self._instr.write("TEMP:RJUN:RSEL " + ref_junc + "," + channel)
+        if self.get_error() != '0,"No error"':
+            logger.error("Modules {} only have automatic cjc, not {}"
+                         .format(self.automatic_cjc_modules_list, self.configured_modules[module]))
 
     def mode_temp_ther(self, channel, transducer, ther_type,):
         self._instr.write("TEMP:TRAN " + transducer + "," + channel)
@@ -396,63 +401,3 @@ class Keithley27XXVISADriver:
                     self._instr.write("ROUT:SCAN:LSEL INT")
                 
             return channels
-        
-    def stop_acquisition(self):
-        # If scan in process, stop it
-        self._instr.write("ROUT:SCAN:LSEL NONE")
-
-    def user_command(self):
-        command = input('Enter here a command you want to send directly to the Keithley [if None, press enter]: ')
-        if command != '':
-            if command[-1] == "?":
-                print(self._instr.query(command))
-            else:
-                self._instr.write(command)
-            self.user_command()
-        else:
-            pass
-
-
-if __name__ == "__main__":
-    try:
-        print("In main")
-
-        # You can use this main section for:
-        # - Testing connexion and communication with your instrument
-        # - Testing new methods in developer mode
-
-        RM = visa.ResourceManager("@py")
-        print("list resources", RM.list_resources())
-
-        # K2700 Instance of KeithleyVISADriver class (replace ASRL1::INSTR by the name of your resource)
-        k2700 = Keithley27XXVISADriver("ASRL1::INSTR")
-        k2700.init_hardware()
-        print("IDN?")
-        print(k2700.get_idn())
-        k2700.reset()
-        k2700.configuration_sequence()
-
-        # Daq_viewer simulation first run
-        k2700.set_mode(str(input('Enter which mode you want to scan \
-        [scan_scan_list, scan_volt:dc, scan_r2w, scan_temp...]:')))
-        print('Manual scan example of command set to send directly: >init >*trg >trac:data?')
-        k2700.user_command()
-        print('Automatic scan example with 2 iterations')
-        for i in range(2):
-            print(k2700.data())
-        print(k2700.data())
-
-        # Daq_viewer simulation change mode
-        k2700.set_mode(str(input('Enter which mode you want to scan \
-        [scan_scan_list, scan_volt:dc, scan_r2w, scan_temp...]:')))
-        for i in range(2):
-            print(k2700.data())
-        print(k2700.data())
-
-        k2700.clear_buffer()
-        k2700.close()
-
-        print("Out")
-
-    except Exception as e:
-        print("Exception ({}): {}".format(type(e), str(e)))
