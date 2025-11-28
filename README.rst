@@ -27,6 +27,7 @@ Contributors
 * Nicolas Bruyant
 * Loïc Guilmard (loic.guilmard@insa-lyon.fr)
 * Anthony Buthod (anthony.buthod@insa-lyon.fr)
+* Arnaud Meyer (arnaud.meyer@univ-st-etienne.fr)
 
 Instruments
 ===========
