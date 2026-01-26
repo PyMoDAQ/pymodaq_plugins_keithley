@@ -100,7 +100,7 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
 
         # Current limit
         if name == "ilimit":
-           self.controller.channel.current_limit = qty.to("A")
+           self.controller.channel.current_limit = qty.to("A").m
 
 
     def ini_detector(self, controller=None):
