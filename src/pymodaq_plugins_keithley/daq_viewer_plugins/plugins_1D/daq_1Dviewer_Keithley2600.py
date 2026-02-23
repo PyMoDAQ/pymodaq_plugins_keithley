@@ -8,27 +8,10 @@ from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, como
 from pymodaq.utils.data import DataFromPlugins
 
 import pyvisa
-from pymodaq_plugins_keithley.hardware.keithley2600.keithley2600_VISADriver import Keithley2600VISADriver, Keithley2600Channel
+from pymodaq_plugins_keithley.hardware.keithley2600.keithley2600_VISADriver import Keithley2600VISADriver, Keithley2600Channel, get_VISA_resources
 
 
 # Helper functions
-def _get_VISA_resources(pyvisa_backend="@py"):
-
-    # Get list of VISA resources
-    resourceman = pyvisa.ResourceManager(pyvisa_backend)
-    resources = list(resourceman.list_resources())
-
-    # Move the first USB connection to the top
-    for i, val in enumerate(resources):
-        if val.startswith("USB0"):
-            resources.remove(val)
-            resources.insert(0, val)
-            break
-
-    # Return list of resources
-    return resources
-
-
 def _build_param(name, title, type, value, limits=None, unit=None, **kwargs):
     params = {}
     params["name"] = name
@@ -68,7 +51,7 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
 
     """
     params = comon_parameters+[
-        _build_param("resource_name", "VISA resource", "list", "", limits=_get_VISA_resources()),
+        _build_param("resource_name", "VISA resource", "list", "", limits=get_VISA_resources()),
         _build_param("channel", "Channel", "str", "A"),
         _build_param("startv", "Sweep start voltage", "float", 0, unit="V"),
         _build_param("stopv", "Sweep stop voltage", "float", 1, unit="V"),

@@ -5,6 +5,24 @@ from pymodaq.utils.logger import set_logger, get_module_name
 logger = set_logger(get_module_name(__file__))
 
 
+# Helper functions
+def get_VISA_resources(pyvisa_backend="@py"):
+
+    # Get list of VISA resources
+    resourceman = pyvisa.ResourceManager(pyvisa_backend)
+    resources = list(resourceman.list_resources())
+
+    # Move the first USB connection to the top
+    for i, val in enumerate(resources):
+        if val.startswith("USB0"):
+            resources.remove(val)
+            resources.insert(0, val)
+            break
+
+    # Return list of resources
+    return resources
+
+
 def table_to_np(table):
     """Convert sequence of ASCII-encoded, comma-separated values to NumPy array."""
     split = table.split(", ")
