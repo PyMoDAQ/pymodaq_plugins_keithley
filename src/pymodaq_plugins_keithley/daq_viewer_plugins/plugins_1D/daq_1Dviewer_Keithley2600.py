@@ -8,7 +8,7 @@ from pymodaq.control_modules.viewer_utility_classes import DAQ_Viewer_base, como
 from pymodaq.utils.data import DataFromPlugins
 
 import pyvisa
-from pymodaq_plugins_keithley.hardware.keithley2600.keithley2600_VISADriver import Keithley2600VISADriver
+from pymodaq_plugins_keithley.hardware.keithley2600.keithley2600_VISADriver import Keithley2600VISADriver, Keithley2600Channel
 
 
 # Helper functions
@@ -82,6 +82,7 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
     def ini_attributes(self):
         # Type declaration of the controller
         self.controller: Keithley2600VISADriver = None
+        self.channel: Keithley2600Channel = None
 
 
     def commit_settings(self, param: Parameter):
@@ -117,24 +118,26 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
             False if initialization failed otherwise True
         """
 
+        # Get initialization parameters
+        resource_name = self.settings["resource_name"]
+        channel = self.settings["channel"]
+        autorange = self.settings["autorange"]
+
         # If stand-alone device, initialize controller object
         if self.is_master:
 
-            # Get initialization parameters
-            resource_name = self.settings["resource_name"]
-            channel = self.settings["channel"]
-            autorange = self.settings["autorange"]
-
             # Initialize device
-            self.controller = Keithley2600VISADriver(resource_name,
-                                                     channel_name=channel,
-                                                     autorange=autorange)
+            self.controller = Keithley2600VISADriver(resource_name)
             initialized = True
 
         # If slave device, retrieve controller object
         else:
             self.controller = controller
             initialized = True
+
+        # Initialize channel
+        self.channel = self.controller.create_channel(channel_name=channel,
+                                                      autorange=autorange)
 
         # Initialize viewers panel with the future type of data
         mock_x = np.linspace(0, 1, 101)
@@ -173,10 +176,10 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         ilimit = self.settings["ilimit"]
 
         # Apply current limit
-        self.controller.channel.Ilimit = ilimit
+        self.channel.Ilimit = ilimit
 
         # Sweep and retrieve x and y axes
-        x, y = self.controller.channel.sweepV_measureI(startv, stopv, stime, npoints)
+        x, y = self.channel.sweepV_measureI(startv, stopv, stime, npoints)
 
         # Emit data to PyMoDAQ
         _emit_xy_data(self, x, y)

@@ -21,34 +21,38 @@ class Keithley2600VISADriver:
     """
 
 
-    def __init__(self, resource_name, channel_name="A", autorange=True, pyvisa_backend="@py"):
+    def __init__(self, resource_name, pyvisa_backend="@py"):
         """Initialize KeithleyVISADriver class.
 
         Parameters
         ----------
         resource_name: str
             VISA resource name. (ex: "USB0::1510::9782::1234567::0::INSTR")
-        channel_name: str, optional
-            Channel name. (default: "A")
-        autorange: bool, optional
-            Enable I and V autorange. (default: True)
         pyvisa_backend: str, optional
             pyvisa backend identifier or path to the visa backend dll (ref. to pyvisa)
             (default: "@py")
         """
-
-        # Establish connection
         resourceman = pyvisa.ResourceManager(pyvisa_backend)
         self._instr = resourceman.open_resource(resource_name)
-
-        # Create channel
-        self.channel = Keithley2600Channel(self, channel_name, autorange)
 
 
     def close(self):
         """Terminate connection with the instrument."""
         self._instr.close()
         self._instr = None
+
+
+    def create_channel(self, channel_name="A", autorange=True):
+        """Create an object for driving an SMU channel connected to this device.
+
+        Parameters
+        ----------
+        channel_name: str, optional
+            Channel name. (default: "A")
+        autorange: bool, optional
+            Enable I and V autorange. (default: True)
+        """
+        return Keithley2600Channel(self, channel_name, autorange)
 
 
     def _write(self, cmd):
@@ -62,7 +66,7 @@ class Keithley2600VISADriver:
 
 
 class Keithley2600Channel:
-    """Class for handling a single channel on a Keithley 2600 sourcemeter."""
+    """Class for handling a single SMU channel on a Keithley 2600 sourcemeter."""
 
     def __init__(self, parent, channel, autorange):
         """Initialize class.
@@ -162,8 +166,9 @@ class Keithley2600Channel:
 
         Parameters
         ----------
-        highz: bool, default: False
+        highz: bool, optional
             Set output to high impedance mode in addition to switching off.
+            (default: False)
         """
         offmode = 2 if highz else 0
         self._write(f"{self.smu}.source.output = {offmode}")
