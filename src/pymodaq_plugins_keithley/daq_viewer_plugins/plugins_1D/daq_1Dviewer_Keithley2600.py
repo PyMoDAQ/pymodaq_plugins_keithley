@@ -100,7 +100,7 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
 
         # Current limit
         if name == "ilimit":
-           self.controller.channel.current_limit = qty.to("A").m
+           self.controller.channel.Ilimit = qty.to("A").m
 
 
     def ini_detector(self, controller=None):
@@ -138,7 +138,10 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
             self.controller = controller
             initialized = True
 
-        # Initialize viewers pannel with the future type of data
+        # Get current limit applied in the device
+        self.settings["ilimit"] = self.controller.channel.Ilimit
+
+        # Initialize viewers panel with the future type of data
         mock_x = np.linspace(0, 1, 101)
         mock_y = np.zeros(101)
         _emit_xy_data(self, mock_x, mock_y)

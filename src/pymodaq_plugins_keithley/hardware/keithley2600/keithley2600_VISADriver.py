@@ -98,36 +98,101 @@ class Keithley2600Channel:
 
 
     @property
-    def current_limit(self):
+    def Ilimit(self):
         """Get current limit [A] of the channel.
 
         Returns
         -------
-        current_limit: float
+        ilimit: float
             Current limit [A] of the selected channel.
         """
         self._write(f"print({self.smu}.source.limiti)")
-        limit = self._read()
-        return float(limit)
+        ilimit = self._read()
+        return float(ilimit)
 
 
-    @current_limit.setter
-    def current_limit(self, limit):
+    @Ilimit.setter
+    def Ilimit(self, ilimit):
         """Set current limit [A] of the channel.
 
         Parameters
         ----------
-        limit: float
+        ilimit: float
             Current limit [A] to set.
         """
-        limit = f"{limit:.6e}"
-        self._write(f"{self.smu}.source.limiti = {limit}")
+        ilimit = f"{ilimit:.6e}"
+        self._write(f"{self.smu}.source.limiti = {ilimit}")
+
+
+    @property
+    def Vlimit(self):
+        """Get voltage limit [A] of the channel.
+
+        Returns
+        -------
+        vlimit: float
+            Voltage limit [A] of the selected channel.
+        """
+        self._write(f"print({self.smu}.source.limitv)")
+        vlimit = self._read()
+        return float(vlimit)
+
+
+    @Vlimit.setter
+    def Vlimit(self, vlimit):
+        """Set voltage limit [A] of the channel.
+
+        Parameters
+        ----------
+        vlimit: float
+            Voltage limit [A] to set.
+        """
+        vlimit = f"{vlimit:.6e}"
+        self._write(f"{self.smu}.source.limitv = {vlimit}")
 
 
     def autorange(self):
         """Set current and voltage measurements to autorange."""
         self._write(f"{self.smu}.measure.autorangei = {self.smu}.AUTORANGE_ON")
         self._write(f"{self.smu}.measure.autorangev = {self.smu}.AUTORANGE_ON")
+
+
+    def off(self, highz=False):
+        """Switch off channel output.
+
+        Parameters
+        ----------
+        highz: bool, default: False
+            Set output to high impedance mode in addition to switching off.
+        """
+        offmode = 2 if highz else 0
+        self._write(f"{self.smu}.source.output = {offmode}")
+
+
+    def constantI(self, isetpoint):
+        """Set channel output to constant current with the specified setpoint.
+
+        Parameters
+        ----------
+        isetpoint: float
+            Current [A] to set.
+        """
+        isetpoint = f"{isetpoint:.6e}"
+        self._write(f"{self.smu}.source.output = 1")
+        self._write(f"{self.smu}.source.leveli = {isetpoint}")
+
+
+    def constantV(self, vsetpoint):
+        """Set channel output to constant voltage with the specified setpoint.
+
+        Parameters
+        ----------
+        vsetpoint: float
+            Voltage [V] to set.
+        """
+        vsetpoint = f"{vsetpoint:.6e}"
+        self._write(f"{self.smu}.source.output = 1")
+        self._write(f"{self.smu}.source.levelv = {vsetpoint}")
 
 
     def sweepV_measureI(self, startv=0, stopv=1, stime=1e-3, npoints=100):
