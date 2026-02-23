@@ -10,6 +10,9 @@ from pymodaq.utils.data import DataFromPlugins
 import pyvisa
 from pymodaq_plugins_keithley.hardware.keithley2600.keithley2600_VISADriver import Keithley2600VISADriver, Keithley2600Channel, get_VISA_resources
 
+import datetime
+from qtpy.QtCore import QDateTime
+
 
 # Helper functions
 def _build_param(name, title, type, value, limits=None, unit=None, **kwargs):
@@ -61,6 +64,10 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         _build_param("autorange", "Autorange", "bool", True),
         _build_param("idle_pol_on", "Keep polarized after scan", "bool", False),
         _build_param("idle_pol_v", "Polarization voltage after scan", "float", 0, unit="V"),
+        _build_param("meas_start", "Last measurement start time", "date_time",
+                     QDateTime(datetime.datetime.now()), readonly=True),
+        _build_param("meas_end", "Last measurement end time", "date_time",
+                     QDateTime(datetime.datetime.now()), readonly=True),
         ]
 
 
@@ -165,8 +172,16 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         # Apply current limit
         self.channel.Ilimit = ilimit
 
+        # Get timestamp before acquisition
+        start_time = datetime.datetime.now()
+
         # Sweep and retrieve x and y axes
         x, y = self.channel.sweepV_measureI(startv, stopv, stime, npoints)
+
+        # Get timestamp after acquisition and update timestamp parameters
+        end_time = datetime.datetime.now()
+        self.settings["meas_start"] = QDateTime(start_time)
+        self.settings["meas_end"] = QDateTime(end_time)
 
         # Emit data to PyMoDAQ
         _emit_xy_data(self, x, y)
