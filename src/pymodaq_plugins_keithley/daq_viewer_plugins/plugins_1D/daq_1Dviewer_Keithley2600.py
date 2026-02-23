@@ -98,9 +98,7 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         unit = param.opts.get("suffix")
         qty = Q_(val, unit)
 
-        # Current limit
-        if name == "ilimit":
-           self.controller.channel.Ilimit = qty.to("A").m
+        # No argument processing for now
 
 
     def ini_detector(self, controller=None):
@@ -138,9 +136,6 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
             self.controller = controller
             initialized = True
 
-        # Get current limit applied in the device
-        self.settings["ilimit"] = self.controller.channel.Ilimit
-
         # Initialize viewers panel with the future type of data
         mock_x = np.linspace(0, 1, 101)
         mock_y = np.zeros(101)
@@ -175,6 +170,10 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         stopv = self.settings["stopv"]
         stime = self.settings["stime"]
         npoints = self.settings["npoints"]
+        ilimit = self.settings["ilimit"]
+
+        # Apply current limit
+        self.controller.channel.Ilimit = ilimit
 
         # Sweep and retrieve x and y axes
         x, y = self.controller.channel.sweepV_measureI(startv, stopv, stime, npoints)
