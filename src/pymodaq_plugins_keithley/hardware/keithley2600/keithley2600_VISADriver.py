@@ -223,6 +223,7 @@ class Keithley2600Channel:
             Current [A] to set.
         """
         isetpoint = f"{isetpoint:.6e}"
+        self._write(f"{self.smu}.source.func = 0")
         self._write(f"{self.smu}.source.output = 1")
         self._write(f"{self.smu}.source.leveli = {isetpoint}")
 
@@ -236,6 +237,7 @@ class Keithley2600Channel:
             Voltage [V] to set.
         """
         vsetpoint = f"{vsetpoint:.6e}"
+        self._write(f"{self.smu}.source.func = 1")
         self._write(f"{self.smu}.source.output = 1")
         self._write(f"{self.smu}.source.levelv = {vsetpoint}")
 
