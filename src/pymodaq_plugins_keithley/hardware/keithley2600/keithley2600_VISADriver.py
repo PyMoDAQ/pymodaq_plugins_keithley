@@ -179,6 +179,28 @@ class Keithley2600Channel:
         self._write(f"{self.smu}.measure.autorangev = {self.smu}.AUTORANGE_ON")
 
 
+    def measureI(self):
+        """Measure current [A]."""
+        self._write(f"print({self.smu}.measure.i())")
+        meas = self._read()
+        return float(meas)
+
+
+    def measureV(self):
+        """Measure voltage [V]."""
+        self._write(f"print({self.smu}.measure.v())")
+        meas = self._read()
+        return float(meas)
+
+
+    def measureIV(self):
+        """Measure simultaneously current [A] and voltage [V]."""
+        self._write(f"print({self.smu}.measure.iv())")
+        ret = self._read()
+        i, v = ret.split()
+        return float(i), float(v)
+
+
     def off(self, highz=False):
         """Switch off channel output.
 
