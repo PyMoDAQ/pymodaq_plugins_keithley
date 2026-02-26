@@ -38,6 +38,7 @@ Actuator
 ++++++++
 
 * **Keithley2400**: Sourcemeter Keithley  2400 (using pymeasure intermediate package)
+* **Keithley2600**: Keithley 2600 series Sourcemeter
 
 Viewer0D
 ++++++++
