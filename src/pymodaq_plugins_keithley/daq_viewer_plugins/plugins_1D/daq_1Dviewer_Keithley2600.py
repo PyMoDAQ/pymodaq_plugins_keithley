@@ -58,7 +58,9 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         _build_param("stime", "Sweep stabilization time", "float", 1e-3, unit="s"),
         _build_param("npoints", "Sweep points", "int", 101),
         _build_param("ilimit", "Current limit", "float", 0.1, unit="A"),
-        _build_param("autorange", "Autorange", "bool", True)
+        _build_param("autorange", "Autorange", "bool", True),
+        _build_param("idle_pol_on", "Keep polarized after scan", "bool", False),
+        _build_param("idle_pol_v", "Polarization voltage after scan", "float", 0, unit="V"),
         ]
 
 
@@ -157,6 +159,8 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
         stime = self.settings["stime"]
         npoints = self.settings["npoints"]
         ilimit = self.settings["ilimit"]
+        idle_pol_on = self.settings["idle_pol_on"]
+        idle_pol_v = self.settings["idle_pol_v"]
 
         # Apply current limit
         self.channel.Ilimit = ilimit
@@ -166,6 +170,10 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
 
         # Emit data to PyMoDAQ
         _emit_xy_data(self, x, y)
+
+        # If "keep polarized after scan" is selected, apply selected voltage
+        if idle_pol_on:
+            self.channel.constantV(idle_pol_v)
 
 
     def stop(self):
