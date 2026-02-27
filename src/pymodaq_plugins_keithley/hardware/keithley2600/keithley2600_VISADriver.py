@@ -214,7 +214,7 @@ class Keithley2600Channel:
         self._write(f"{self.smu}.source.output = {offmode}")
 
 
-    def constantI(self, isetpoint):
+    def sourceI(self, isetpoint):
         """Set channel output to constant current with the specified setpoint.
 
         Parameters
@@ -228,7 +228,7 @@ class Keithley2600Channel:
         self._write(f"{self.smu}.source.leveli = {isetpoint}")
 
 
-    def constantV(self, vsetpoint):
+    def sourceV(self, vsetpoint):
         """Set channel output to constant voltage with the specified setpoint.
 
         Parameters

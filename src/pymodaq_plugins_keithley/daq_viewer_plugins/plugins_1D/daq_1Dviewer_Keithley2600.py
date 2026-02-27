@@ -173,7 +173,7 @@ class DAQ_1DViewer_Keithley2600(DAQ_Viewer_base):
 
         # If "keep polarized after scan" is selected, apply selected voltage
         if idle_pol_on:
-            self.channel.constantV(idle_pol_v)
+            self.channel.sourceV(idle_pol_v)
 
 
     def stop(self):

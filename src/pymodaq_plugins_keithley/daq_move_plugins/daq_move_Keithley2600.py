@@ -87,13 +87,13 @@ class DAQ_Move_Keithley2600(DAQ_Move_base):
         if self.v_source:
             self.axis_unit = "V"
             self._meas_function = self.channel.measureV
-            self._move_function = self.channel.constantV
+            self._move_function = self.channel.sourceV
 
         # Current source
         elif self.i_source:
             self.axis_unit = "A"
             self._meas_function = self.channel.measureI
-            self._move_function = self.channel.constantI
+            self._move_function = self.channel.sourceI
 
         # Unknown source type
         else:
