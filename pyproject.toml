@@ -16,6 +16,7 @@ dependencies = [
     "pyvisa",
     "pyvisa-py",
     "pymeasure",
+    "pyserial",
     "pyusb",
     "zeroconf"
 ]
